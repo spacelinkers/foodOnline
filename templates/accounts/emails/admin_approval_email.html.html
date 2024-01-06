@@ -1,0 +1,11 @@
+{% autoescape off %}
+
+Hi {{user.first_name}},
+
+{% if is_approval %}
+Congratulations! Your restaurant has been approveed by our admin team. --foodOnline
+{% else %}
+Sorry you are not eligible for publishing your food menu on our restaurant.
+{% endif %}
+
+{% endautoescape %}

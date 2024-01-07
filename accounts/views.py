@@ -187,6 +187,8 @@ def vendorDashboard(request):
     return render(request, 'accounts/vendorDashboard.html', context)
 
 
+@login_required(login_url='login')
+@user_passes_test(check_role_vendor)
 def forgot_password(request):
     if request.method == 'POST':
         email = request.POST['email']
@@ -208,6 +210,8 @@ def forgot_password(request):
     return render(request, 'accounts/forgot_password.html')
 
 
+@login_required(login_url='login')
+@user_passes_test(check_role_vendor)
 def reset_password_validate(request, uidb64, token):
     # validate the user by decoding the token and user pk.
     try:
@@ -225,6 +229,8 @@ def reset_password_validate(request, uidb64, token):
         return redirect('myAccount')
 
 
+@login_required(login_url='login')
+@user_passes_test(check_role_vendor)
 def reset_password(request):
     if request.method == 'POST':
         password = request.POST['password']

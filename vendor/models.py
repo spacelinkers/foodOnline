@@ -1,4 +1,6 @@
 from django.db import models
+from datetime import time, date, datetime
+
 from accounts.models import User, UserProfile
 from accounts.utils import send_notification
 
@@ -15,6 +17,29 @@ class Vendor(models.Model):
 
     def __str__(self):
         return self.vendor_name
+    
+
+    def is_open(self):
+        today_date = date.today()
+        today = today_date.isoweekday()
+
+        current_opening_hours = OpeningHour.objects.filter(vendor=self, day=today)
+        now = datetime.now()
+        current_time = now.strftime("%H:%M:%S")
+
+        is_open = None
+
+        for time in current_opening_hours:
+            start = str(datetime.strftime(time.from_hour, "%I:%M %p").time())
+            end = str(datetime.strftime(time.to_hour, "%I:%M %p").time())
+
+            if current_time > start and current_time < end:
+                is_open = True
+                break
+            else:
+                is_open = False
+
+        return is_open
 
 
     def save(self, *args, **kwargs):
@@ -37,3 +62,31 @@ class Vendor(models.Model):
                     send_notification(mail_subject, mail_template, context)
 
         return super(Vendor, self).save(*args, **kwargs)
+    
+
+
+DAYS = [
+    (1, ("Friday")),
+    (2, ("Saturday")),
+    (3, ("Sunday")),
+    (4, ("Monday")),
+    (5, ("Tuesday")),
+    (6, ("Wednesday")),
+    (7, ("Thursday")),
+]
+
+HOURS_OF_DAY_24 = [(time(h, m).strftime('%I:%M %p'), time(h, m).strftime('%I:%M %p')) for h in range(0, 24) for m in range(0, 30)]
+
+class OpeningHour(models.Model):
+    vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)
+    day = models.IntegerField(choices=DAYS)
+    from_hour = models.CharField(choices=HOURS_OF_DAY_24, max_length=10, blank=True)
+    to_hour = models.CharField(choices=HOURS_OF_DAY_24, max_length=10, blank=True)
+    is_closed = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ('day', '-from_hour')
+        unique_together = ('vendor', 'day', 'from_hour', 'to_hour')
+
+    def __str__(self):
+        return self.get_day_display()

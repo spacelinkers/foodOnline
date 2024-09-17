@@ -30,14 +30,15 @@ class Vendor(models.Model):
         is_open = None
 
         for time in current_opening_hours:
-            start = str(datetime.strftime(time.from_hour, "%I:%M %p").time())
-            end = str(datetime.strftime(time.to_hour, "%I:%M %p").time())
+            if not time.is_closed:
+                start = str(datetime.strptime(time.from_hour, "%I:%M %p").time())
+                end = str(datetime.strptime(time.to_hour, "%I:%M %p").time())
 
-            if current_time > start and current_time < end:
-                is_open = True
-                break
-            else:
-                is_open = False
+                if current_time > start and current_time < end:
+                    is_open = True
+                    break
+                else:
+                    is_open = False
 
         return is_open
 
@@ -75,7 +76,7 @@ DAYS = [
     (7, ("Thursday")),
 ]
 
-HOURS_OF_DAY_24 = [(time(h, m).strftime('%I:%M %p'), time(h, m).strftime('%I:%M %p')) for h in range(0, 24) for m in range(0, 30)]
+HOURS_OF_DAY_24 = [(time(h, m).strftime('%I:%M %p'), time(h, m).strftime('%I:%M %p')) for h in range(0, 24) for m in (0, 30)]
 
 class OpeningHour(models.Model):
     vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)
